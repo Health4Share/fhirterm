@@ -24,7 +24,7 @@ before_script:
   - sudo su postgres -c "psql -c \"create role fhirterm with superuser login encrypted password 'fhirterm';\""
   # - sudo su postgres -c "psql -c \"create role fhirbase with superuser login encrypted password 'fhirbase';\""
   - wget -O data/fhirterm.backup https://www.dropbox.com/s/w1o5tlt97hdf2af/fhirterm.backup?dl=1
-  - sudo su postgres -c "pg_restore -d fhirterm data/fhirterm.backup"  
+  - sudo su postgres -c "pg_restore -O -d fhirterm data/fhirterm.backup"  
   # - wget -O /tmp/fhirbase.sql https://raw.githubusercontent.com/fhirbase/fhirbase/master/fhirbase--1.0.sql
   # - PGPASSWORD=fhirbase psql -U fhirbase -h localhost fhirbase < /tmp/fhirbase.sql
   # - wget -O /tmp/fhirplace-master.zip https://github.com/fhirbase/fhirplace/archive/master.zip
