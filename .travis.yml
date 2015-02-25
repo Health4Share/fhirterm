@@ -23,9 +23,8 @@ before_script:
   # - sudo su postgres -c "psql -c 'create database fhirbase;'"
   - sudo su postgres -c "psql -c \"create role fhirterm with superuser login encrypted password 'fhirterm';\""
   # - sudo su postgres -c "psql -c \"create role fhirbase with superuser login encrypted password 'fhirbase';\""
-  - wget -O data/loinc.zip https://www.dropbox.com/s/u4qsfc7ciiaqfqa/LOINC_248_Text.zip?dl=1
-  - wget -O data/snomed.zip https://www.dropbox.com/s/rr5bho3npfnviji/SnomedCT_Release_INT_20140731_only_data.zip?dl=1
-  - wget -O data/rxnorm.zip https://www.dropbox.com/s/mipvp6i57es7pew/RxNorm_full_01052015_only_data.zip?dl=1
+  - wget -O data/fhirterm.backup https://www.dropbox.com/s/w1o5tlt97hdf2af/fhirterm.backup?dl=1
+  - sudo su postgres -c "pg_restore -d fhirterm data/fhirterm.backup"  
   # - wget -O /tmp/fhirbase.sql https://raw.githubusercontent.com/fhirbase/fhirbase/master/fhirbase--1.0.sql
   # - PGPASSWORD=fhirbase psql -U fhirbase -h localhost fhirbase < /tmp/fhirbase.sql
   # - wget -O /tmp/fhirplace-master.zip https://github.com/fhirbase/fhirplace/archive/master.zip
@@ -43,6 +42,5 @@ before_script:
   - cd /home/travis/build/fhirbase/fhirterm
 
 script:
-  - LOG_LEVEL=info lein test :tasks
-  - sudo cat /var/log/postgresql/postgresql-9.4-main.log
+  - LOG_LEVEL=info lein run -c test/config.json do import-vs test/fixtures/value_sets
   - lein test :integration
