@@ -11,6 +11,13 @@ Sponsored by:
 
 ![choice-hs.com](http://choice-hs.com/Images/Shared/Choice-HSLogo.png)
 
+## Notices
+
+Command to create DB backup:
+
+```
+$ pg_dump -h localhost -U fhirterm -T netrika_lab_services --exclude-table-data=custom_naming_systems -x --no-owner --no-acl -W -d fhirterm -F c -Z 9 -f fhirterm.backup```
+
 ## License
 
 Copyright © 2014 Health Samurai Team
