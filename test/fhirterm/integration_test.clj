@@ -1,8 +1,10 @@
 (ns fhirterm.integration-test
   (:require [fhirterm.system :as system]
+            [fhirterm.db :as db]
             [clojure.test :refer :all]
             [fhirterm.json :as json]
             [clojure.string :as str]
+            [fhirterm.tasks.import-vs :as import-vs]
             [org.httpkit.client :as http]))
 
 (def ^:dynamic *config* nil)
@@ -15,6 +17,22 @@
 
   (system/stop)
   (let [system (system/start *config*)]
+    (import-vs/perform db/*db* ["test/fixtures/value_sets"])
+
+    (db/e! "DROP TABLE IF EXISTS custom_ns")
+    (db/e! "DELETE FROM custom_naming_systems WHERE table_name = 'custom_ns'")
+
+    (db/e! "CREATE TABLE custom_ns (code varchar primary key,
+                                    display varchar,
+                                    definition varchar)")
+
+    (db/i! :custom_naming_systems {:uri "http://example.com/custom_ns"
+                                   :table_name "custom_ns"})
+
+    (db/i! :custom_ns {:code "a" :display "A code"})
+    (db/i! :custom_ns {:code "b" :display "B code"})
+    (db/i! :custom_ns {:code "c" :display "C code abc"})
+
     (f)
     (println "Stopping server")
     (system/stop)))
@@ -190,6 +208,18 @@
   (doseq [vs ["valueset-test-rxnorm-all" "valueset-test-snomed-all"]]
     (is (= "too-costy"
            (get-in (expand-vs vs) [:issue 0 :type :code])))))
+
+(deftest ^:integration custom-ns-expansions-test
+  (let [r (get-expansion (expand-vs "valueset-custom-ns-no-filters"))]
+    (is (find-coding r "a"))
+    (is (find-coding r "b")))
+
+  (let [r (get-expansion (expand-vs "valueset-custom-ns-no-filters"
+                                    {:filter "abc"}))]
+    (is (find-coding r "c")))
+
+  (let [r (get-expansion (expand-vs "valueset-custom-ns-codes-filter"))]
+    (is (not (find-coding r "c")))))
 
 (deftest ^:integration expansion-with-text-filtering
   ;; defined ns

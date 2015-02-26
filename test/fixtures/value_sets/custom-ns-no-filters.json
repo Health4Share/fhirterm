@@ -1,0 +1,30 @@
+{
+  "resourceType": "ValueSet",
+  "id": "valueset-custom-ns-no-filters",
+  "meta": {
+    "lastUpdated": "2015-02-02T13:17:44.755+11:00"
+  },
+  "text": {
+    "status": "generated",
+    "div": ""
+  },
+  "identifier": "http://localhost/fhirterm/test/valueset-custom-ns-no-filters",
+  "name": "Custom NS no filters",
+  "publisher": "HealthSamurai Team",
+  "telecom": [
+    {
+      "system": "url",
+      "value": "http://health-samurai.io"
+    }
+  ],
+  "description": "",
+  "copyright": "",
+  "status": "draft",
+  "compose": {
+    "include": [
+      {
+        "system": "http://example.com/custom_ns"
+      }
+    ]
+  }
+}
