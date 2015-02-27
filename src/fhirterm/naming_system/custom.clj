@@ -60,4 +60,4 @@
        :display (:display found-concept)
        :designation [{:value (:display found-concept)}]})))
 
-(defn costy? [s filters] false)
+(defn costly? [s filters] false)

@@ -78,4 +78,4 @@
 
     (map row-to-coding (db/q query))))
 
-(defn costy? [filters] false)
+(defn costly? [filters] false)

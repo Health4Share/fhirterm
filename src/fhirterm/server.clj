@@ -51,8 +51,8 @@
       (let [vs (vs/find-by-id id)]
         (if vs
           (let [expansion (vs/expand vs (normalize-expand-params params))]
-            (if (= expansion :too-costy)
-              (respond-with-outcome :fatal :too-costy
+            (if (= expansion :too-costly)
+              (respond-with-outcome :fatal :too-costly
                                     "ValueSet expansion will consume too much resources"
                                     200)
 

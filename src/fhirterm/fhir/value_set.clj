@@ -92,25 +92,25 @@
                   result)))
             expansion imports)))
 
-(declare costy-expansion?)
-(defn- costy-import? [vs params]
+(declare costly-expansion?)
+(defn- costly-import? [vs params]
   (let [imports (get-in vs [:compose :import])]
     (reduce (fn [result identifier]
               (if (not result)
                 (let [imported-vs (find-by-identifier identifier)]
                   (if imported-vs
-                    (costy-expansion? imported-vs params)
+                    (costly-expansion? imported-vs params)
                     result))
 
                 result))
             false imports)))
 
-(defn- costy-compose? [vs params]
+(defn- costly-compose? [vs params]
   (let [filters-by-ns (get-composing-filters vs params)]
     (reduce (fn [res [ns filters]]
               (if (not res)
                 (let [system (resolve-naming-system ns)]
-                  (naming-system/costy? system filters))
+                  (naming-system/costly? system filters))
                 res))
             false filters-by-ns)))
 
@@ -122,13 +122,13 @@
       (expand-with-compose-include-and-exclude vs params)))
 
 ;; TODO: rewrite with algo.monads
-(defn- costy-expansion? [vs params]
-  (or (costy-import? vs params)
-      (costy-compose? vs params)))
+(defn- costly-expansion? [vs params]
+  (or (costly-import? vs params)
+      (costly-compose? vs params)))
 
 (defn expand [vs params]
-  (if (costy-expansion? vs params)
-    :too-costy
+  (if (costly-expansion? vs params)
+    :too-costly
 
     (let [result (expand* vs params)]
       (assoc vs :expansion {:identifier (util/uuid)

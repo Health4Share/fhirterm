@@ -238,4 +238,4 @@
 
       codings)))
 
-(defn costy? [filters] false)
+(defn costly? [filters] false)

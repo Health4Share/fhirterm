@@ -150,6 +150,6 @@
   (let [q (filters-to-query filters)]
     (map row-to-coding (db/q q))))
 
-(defn costy? [filters]
+(defn costly? [filters]
   (and (not (:text filters))
        (filters-empty? (:include filters) [])))
