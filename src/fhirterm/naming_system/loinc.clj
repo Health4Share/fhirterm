@@ -80,8 +80,8 @@
 
     (map row-to-coding (db/q query))))
 
-(defn costly? [filters]
+(defn costly? [filters threshold]
   (let [count (db/q-val (-> (filters-to-query filters)
                             (sql/select :%count.*)))]
 
-    (> count 200)))
+    (> count threshold)))
