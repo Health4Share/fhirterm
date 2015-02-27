@@ -62,20 +62,26 @@
    (and (not inc-pred) excl-pred) [:not excl-pred]
    :default nil))
 
-(defn filter-codes [filters]
+(defn filters-to-query [filters]
   (let [pred (combine-preds (filters-to-sql-cond (:include filters))
-                            (filters-to-sql-cond (:exclude filters)))
+                            (filters-to-sql-cond (:exclude filters)))]
+    (-> (sql/from :loinc_loincs)
+        ((fn [q]
+           (if pred (sql/where q pred) q)))
 
-        query (-> (sql/select :loinc_num :shortname)
-                  (sql/from :loinc_loincs)
-                  ((fn [q]
-                     (if pred (sql/where q pred) q)))
+        ((fn [q]
+           (if (:text filters)
+             (sql/merge-where q [:ilike :shortname
+                                 (str "%" (:text filters) "%")]) q))))))
 
-                  ((fn [q]
-                     (if (:text filters)
-                       (sql/merge-where q [:ilike :shortname
-                                           (str "%" (:text filters) "%")]) q))))]
+(defn filter-codes [filters]
+  (let [query (-> (filters-to-query filters)
+                  (sql/select :loinc_num :shortname))]
 
     (map row-to-coding (db/q query))))
 
-(defn costly? [filters] false)
+(defn costly? [filters]
+  (let [count (db/q-val (-> (filters-to-query filters)
+                            (sql/select :%count.*)))]
+
+    (> count 200)))

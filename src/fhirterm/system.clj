@@ -43,7 +43,8 @@
     {:server (if headless? nil (server/start config db))
      :db db
      :fhir-client (fhir-client/start config)
-     :env (keyword env)}))
+     :env (keyword env)
+     :config config}))
 
 (defn production? []
   (= (:env *system*) :production))

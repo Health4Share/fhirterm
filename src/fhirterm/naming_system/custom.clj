@@ -60,4 +60,8 @@
        :display (:display found-concept)
        :designation [{:value (:display found-concept)}]})))
 
-(defn costly? [s filters] false)
+(defn costly? [s filters threshold]
+  (let [count (db/q-val (-> (sql/select :%count.*)
+                            (sql/from (keyword (:table_name s)))
+                            (sql/where (filters-to-predicate filters))))]
+    (> count threshold)))

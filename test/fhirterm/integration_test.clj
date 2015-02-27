@@ -78,16 +78,18 @@
         "two codings in expansion")))
 
 (deftest ^:integration expansion-of-vs-with-entire-loinc-included-test
-  (let [result (get-expansion (expand-vs "valueset-observation-codes"))]
-    (is (= (count result) 73889))))
+  (let [result (get-expansion (expand-vs "valueset-observation-codes"
+                                         {:filter "blood"}))]
+    (is (= (count result) 51))))
 
 (deftest ^:integration expansion-of-vs-with-loinc-filtered-by-order-obs-test
-  (let [result (get-expansion (expand-vs "valueset-diagnostic-requests"))]
+  (let [result (get-expansion (expand-vs "valueset-diagnostic-requests"
+                                         {:filter "blood"}))]
 
-    (is (find-coding result "1007-4"))
-    (is (find-coding result "44241-8"))
+    (is (find-coding result "888-8"))
+    (is (find-coding result "55429-5"))
 
-    (is (= (count result) 38375))))
+    (is (= (count result) 6))))
 
 (deftest ^:integration expansion-of-snomed-vs-test
   (let [result (get-expansion (expand-vs "valueset-route-codes"
@@ -205,7 +207,8 @@
     (is (= (count result) 16792))))
 
 (deftest ^:integration too-costly-expansions-test
-  (doseq [vs ["valueset-test-rxnorm-all" "valueset-test-snomed-all"]]
+  (doseq [vs ["valueset-test-rxnorm-all" "valueset-test-snomed-all"
+              "valueset-observation-codes"]]
     (is (= "too-costly"
            (get-in (expand-vs vs) [:issue 0 :type :code])))))
 
