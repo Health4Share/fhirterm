@@ -158,5 +158,6 @@
 
 (defn costly? [filters threshold]
   (let [q (-> (filters-to-query filters)
-              (sql/select (sqlc/raw "COUNT(DISTINCT(rxcui))")))]
+              (sql/select (sqlc/raw "COUNT(DISTINCT(rxcui))"))
+              (dissoc :group-by))]
     (> (or (db/q-val q) 0) threshold)))

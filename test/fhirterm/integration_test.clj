@@ -175,11 +175,12 @@
 
     (is (= (count result) 957)))
 
-  (let [result (get-expansion (expand-vs "valueset-test-rxnorm-filter-sab"))]
-    (doseq [c ["479172" "1312359" "313771" "283504"]]
+  (let [result (get-expansion (expand-vs "valueset-test-rxnorm-filter-sab"
+                                         {:filter "ba"}))]
+    (doseq [c ["1116309" "221167" "1369787" "866305"]]
       (is (find-coding result c)))
 
-    (is (= (count result) 16138)))
+    (is (= (count result) 624)))
 
   (let [excluded-codes {"310214" "estropipate"
                         "1012727" "CARBINOXAMINE"
@@ -193,24 +194,26 @@
                 code)))))
 
   (let [result (get-expansion (expand-vs "valueset-test-rxnorm-filter-except-only"
-                                         {:filter "fa"}))]
-    (doseq [c ["1047917" "197691" "313585" "336815"]]
+                                         {:filter "ban"}))]
+    (doseq [c ["617515" "1167996" "564109" "379572"]]
       (is (find-coding result c))))
 
-  (let [result (get-expansion (expand-vs "valueset-test-rxnorm-filter-combinations"))]
-    (doseq [c ["1311583" "204175" "310489" "996923"]]
+  (let [result (get-expansion (expand-vs "valueset-test-rxnorm-filter-combinations"
+                                         {:filter "ban"}))]
+    (doseq [c ["1148138" "115264" "904955" "1232082"]]
       (is (find-coding result c)))
 
     (doseq [c ["310214" "1012727" "861035" "397"]]
       (is (not (find-coding result c))))
 
-    (is (= (count result) 16792))))
+    (is (= (count result) 30))))
 
 (deftest ^:integration too-costly-expansions-test
   (doseq [vs ["valueset-test-rxnorm-all" "valueset-test-snomed-all"
               "valueset-observation-codes"]]
     (is (= "too-costly"
-           (get-in (expand-vs vs) [:issue 0 :type :code])))))
+           (get-in (expand-vs vs) [:issue 0 :type :code]))
+        vs)))
 
 (deftest ^:integration custom-ns-expansions-test
   (let [r (get-expansion (expand-vs "valueset-custom-ns-no-filters"))]
