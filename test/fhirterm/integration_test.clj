@@ -259,10 +259,14 @@
     (is (= (count result) 1))))
 
 (deftest ^:integration expansion-with-limit-filter
-  (doseq [vs ["valueset-questionnaire-question-text-type"
+  (doseq [vs [
               "valueset-ucum-vitals-common"
               "valueset-daf-problem-severity"
               "lipid-ldl-codes"
               "valueset-contraindication-mitigation-action"]]
     (let [r (get-expansion (expand-vs vs {:limit 1}))]
-      (is (= (count r) 1) vs))))
+      (is (= (count r) 1) vs)))
+
+  (let [r (get-expansion (expand-vs "valueset-questionnaire-question-text-type"
+                                    {:limit 1}))]
+    (is (= (count r) 2) "valueset-questionnaire-question-text-type")))

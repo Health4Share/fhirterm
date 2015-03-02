@@ -3,6 +3,7 @@
             [fhirterm.util :as util]
             [fhirterm.fhir.client :as fhir-client]
             [fhirterm.naming-system.core :as naming-system]
+            [fhirterm.naming-system.vs-defined :as vs-defined-ns]
             [clj-time.core :as time]
             [clojure.string :as str]))
 
@@ -16,6 +17,10 @@
 (defn find-vs-defining-ns [ns-uri]
   (get-in (fhir-client/search "ValueSet" {:system ns-uri})
           [:entry 0 :resource]))
+
+(defn- params-to-filters [{:keys [limit filter] :as params}]
+  (-> {:text filter :limit limit}
+      (update-in [:limit] (fn [l] (if l (java.lang.Long. l) nil)))))
 
 (defn- resolve-naming-system [ns-uri]
   (if (naming-system/known? ns-uri)
@@ -44,19 +49,19 @@
 (defn- get-composing-filters [vs params]
   (let [includes-by-syst (group-by :system (get-in vs [:compose :include]))
         excludes-by-syst (group-by :system (get-in vs [:compose :exclude]))
-        grouped-filters (reduce (fn [acc syst]
-                                  (assoc acc syst
-                                         {:include
-                                          (filters-from-include-or-exclude (get includes-by-syst syst))
-                                          :exclude
-                                          (filters-from-include-or-exclude (get excludes-by-syst syst))}))
-                                {} (keys includes-by-syst))]
+        grouped-filters
+        (reduce (fn [acc syst]
+                  (assoc acc syst
+                         {:include
+                          (filters-from-include-or-exclude (get includes-by-syst syst))
+                          :exclude
+                          (filters-from-include-or-exclude (get excludes-by-syst syst))}))
+                {} (keys includes-by-syst))]
 
     ;; add text filter, if any
     (reduce (fn [acc [ns fs]]
-              (-> acc
-                  (assoc-in [ns :text] (:filter params))
-                  (assoc-in [ns :limit] (:limit params))))
+              (assoc acc ns (merge (get acc ns)
+                                   (params-to-filters params))))
             grouped-filters grouped-filters)))
 
 (defn- expand-with-compose-include-and-exclude [expansion vs params]
@@ -66,23 +71,12 @@
                 (into res (naming-system/filter-codes system filters))))
             expansion filters-by-ns)))
 
-(defn- expand-with-define [expansion {{:keys [system concept]} :define :as vs} params]
-  (let [result (reduce (fn reduce-fn [result c]
-                         (let [result (conj result
-                                            {:code    (:code c)
-                                             :display (:display c)
-                                             :system  system})
-                               inner-concept (:concept c)]
-                           (if inner-concept
-                             (into result (reduce reduce-fn [] inner-concept))
-                             result)))
-                       expansion
-                       concept)]
-
-    ;; apply text filter, if present
-    (if (:filter params)
-      (filter #(util/string-contains? (:display %) (:filter params) true) result)
-      result)))
+(defn- expand-with-define [expansion vs params]
+  #_(into expansion [{:foo 12} {:foo 13}])
+  (into expansion
+          (vs-defined-ns/filter-codes vs (merge (params-to-filters params)
+                                                {:include []
+                                                 :exclude []}))))
 
 (declare expand*)
 (defn- expand-with-compose-import [expansion vs params]

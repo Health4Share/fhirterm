@@ -17,22 +17,24 @@
     (and matches
          (not (:abstract concept)))))
 
-(defn- concept-matches-filters? [filters path concept]
-  (reduce (fn [r fs]
-            (or r
-                (reduce (fn [r f]
-                          (and r (concept-matches-filter? f path concept)))
-                        true fs)))
-          false filters))
+(defn- concept-matches-filters? [filters path concept result-when-empty]
+  (if (empty? filters)
+    result-when-empty
+    (reduce (fn [r fs]
+              (or r
+                  (reduce (fn [r f]
+                            (and r (concept-matches-filter? f path concept)))
+                          true fs)))
+            false filters)))
 
 (defn- concept-matches-text-filter? [c text]
   (if (not text)
     true
     (util/string-contains? (:display c) text true)))
 
-(defn- check-concept [{:keys [include exclude text]} path concept]
-  (and (concept-matches-filters? include path concept)
-       (not (concept-matches-filters? exclude path concept))
+(defn- check-concept [{:keys [include exclude text] :as filters} path concept]
+  (and (concept-matches-filters? include path concept true)
+       (not (concept-matches-filters? exclude path concept false))
        (concept-matches-text-filter? concept text)))
 
 (defn- filter-concepts [concepts f path]
@@ -47,11 +49,11 @@
                 (into acc (filter-concepts nested f
                                            (conj path (:code c))))
                 acc)))
-          []
-          concepts))
+          [] concepts))
 
 (defn filter-codes [{{concepts :concept} :define :as vs} filters]
   (-> (filter-concepts concepts (partial check-concept filters) [])
+
       ((fn [concepts]
          (if (:limit filters)
            (take (java.lang.Long. (:limit filters)) concepts)
