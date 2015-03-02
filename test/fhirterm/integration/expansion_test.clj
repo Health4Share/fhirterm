@@ -1,50 +1,16 @@
-(ns fhirterm.integration-test
-  (:require [fhirterm.system :as system]
-            [fhirterm.db :as db]
-            [clojure.test :refer :all]
+(ns fhirterm.integration.expansion-test
+  (:require [clojure.test :refer :all]
             [fhirterm.json :as json]
-            [clojure.string :as str]
-            [fhirterm.tasks.import-vs :as import-vs]
+            [fhirterm.fixtures :as fixtures]
+            [fhirterm.helpers :as helpers]
             [org.httpkit.client :as http]))
 
-(def ^:dynamic *config* nil)
-
-(defn start-server-fixture [f]
-  (println "Starting test server")
-
-  (alter-var-root #'*config*
-                  (constantly (system/read-config "test/config.json")))
-
-  (system/stop)
-  (let [system (system/start *config*)]
-    (import-vs/perform db/*db* ["test/fixtures/value_sets"])
-
-    (db/e! "DROP TABLE IF EXISTS custom_ns")
-    (db/e! "DELETE FROM custom_naming_systems WHERE table_name = 'custom_ns'")
-
-    (db/e! "CREATE TABLE custom_ns (code varchar primary key,
-                                    display varchar,
-                                    definition varchar)")
-
-    (db/i! :custom_naming_systems {:uri "http://example.com/custom_ns"
-                                   :table_name "custom_ns"})
-
-    (db/i! :custom_ns {:code "a" :display "A code"})
-    (db/i! :custom_ns {:code "b" :display "B code"})
-    (db/i! :custom_ns {:code "c" :display "C code abc"})
-
-    (f)
-    (println "Stopping server")
-    (system/stop)))
-
-(use-fixtures :once start-server-fixture)
-
-(defn make-url [& p]
-  (let [base (format "http://localhost:%d" (get-in *config* [:http :port]))]
-    (str/join "/" (into [base] p))))
+(use-fixtures :once fixtures/create-custom-ns-fixture)
+(use-fixtures :once fixtures/import-vs-fixture)
+(use-fixtures :once fixtures/start-server-fixture)
 
 (defn expand-vs [id & [params]]
-  (let [{body :body :as response} @(http/get (make-url "ValueSet" id "$expand")
+  (let [{body :body :as response} @(http/get (helpers/make-url "ValueSet" id "$expand")
                                              {:query-params (or params {})})]
 
     (when (nil? body)
@@ -259,8 +225,7 @@
     (is (= (count result) 1))))
 
 (deftest ^:integration expansion-with-limit-filter
-  (doseq [vs [
-              "valueset-ucum-vitals-common"
+  (doseq [vs ["valueset-ucum-vitals-common"
               "valueset-daf-problem-severity"
               "lipid-ldl-codes"
               "valueset-contraindication-mitigation-action"]]

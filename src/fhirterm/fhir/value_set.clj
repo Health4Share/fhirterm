@@ -58,7 +58,7 @@
                           (filters-from-include-or-exclude (get excludes-by-syst syst))}))
                 {} (keys includes-by-syst))]
 
-    ;; add text filter, if any
+    ;; additional filters (for expansion), if any
     (reduce (fn [acc [ns fs]]
               (assoc acc ns (merge (get acc ns)
                                    (params-to-filters params))))
@@ -71,12 +71,23 @@
                 (into res (naming-system/filter-codes system filters))))
             expansion filters-by-ns)))
 
+(defn- validate-with-compose-include-and-exclude [result vs coding]
+  (let [filters-by-ns (get-composing-filters vs {})]
+    (or result
+        (reduce (fn [res [ns filters]]
+                  (let [system (resolve-naming-system ns)]
+                    (or res (naming-system/validate system coding))))
+                false filters-by-ns))))
+
 (defn- expand-with-define [expansion vs params]
-  #_(into expansion [{:foo 12} {:foo 13}])
   (into expansion
-          (vs-defined-ns/filter-codes vs (merge (params-to-filters params)
-                                                {:include []
-                                                 :exclude []}))))
+        (vs-defined-ns/filter-codes vs (merge (params-to-filters params)
+                                              {:include []
+                                               :exclude []}))))
+
+(defn- validate-with-define [result vs coding]
+  (or result
+      (vs-defined-ns/validate vs coding)))
 
 (declare expand*)
 (defn- expand-with-compose-import [expansion vs params]
@@ -87,6 +98,17 @@
                   (into result (expand* imported-vs params))
                   result)))
             expansion imports)))
+
+(declare validate)
+(defn- validate-with-compose-import [result vs coding]
+  (or result
+      (let [imports (get-in vs [:compose :import])]
+        (reduce (fn [res identifier]
+                  (or res
+                      (let [imported-vs (find-by-identifier identifier)]
+                        (when imported-vs
+                          (validate imported-vs coding)))))
+                false imports))))
 
 (declare costly-expansion?)
 (defn- costly-import? [vs params]
@@ -130,3 +152,9 @@
       (assoc vs :expansion {:identifier (util/uuid)
                             :timestamp (time/now)
                             :contains (map #(update-in % [:code] str) result)}))))
+
+(defn validate [vs coding]
+  (-> false
+      (validate-with-define vs coding)
+      (validate-with-compose-import vs coding)
+      (validate-with-compose-include-and-exclude vs coding)))

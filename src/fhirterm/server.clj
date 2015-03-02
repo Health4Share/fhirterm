@@ -16,9 +16,8 @@
 
 (timbre/refer-timbre)
 
-(defn- normalize-expand-params [params]
-  (let [ks [:filter :limit]
-        m (select-keys params ks)]
+(defn- non-blank-keys [params ks]
+  (let [m (select-keys params ks)]
     (select-keys m (for [[k v] m :when (not (str/blank? v))] k))))
 
 (defn respond-with [status obj]
@@ -49,13 +48,24 @@
     (GET "/:id/$expand" {{id :id :as params} :params :as request}
       (let [vs (vs/find-by-id id)]
         (if vs
-          (let [expansion (vs/expand vs (normalize-expand-params params))]
+          (let [expansion (vs/expand vs (non-blank-keys params [:filter :limit]))]
             (if (= expansion :too-costly)
               (respond-with-outcome :fatal :too-costly
                                     "ValueSet expansion will consume too much resources"
                                     200)
 
               (respond-with 200 expansion)))
+
+          (respond-with-not-found (format "Could not find ValueSet with id = %s" id)))))
+
+    (GET "/:id/$validate" {{:keys [id] :as params} :params
+                           :as request}
+      (let [coding (non-blank-keys params [:code :display :system :version])
+            vs (vs/find-by-id id)]
+        (if vs
+          (let [result (vs/validate vs coding)]
+            (respond-with 200 (fhir/make-parameters {:result result
+                                                     :message "TODO: some message here"})))
 
           (respond-with-not-found (format "Could not find ValueSet with id = %s" id))))))
 

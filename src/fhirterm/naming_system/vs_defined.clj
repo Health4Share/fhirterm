@@ -20,6 +20,7 @@
 (defn- concept-matches-filters? [filters path concept result-when-empty]
   (if (empty? filters)
     result-when-empty
+
     (reduce (fn [r fs]
               (or r
                   (reduce (fn [r f]
@@ -63,3 +64,12 @@
   nil)
 
 (defn costly? [vs filters threshold] false)
+
+(defn validate [vs coding]
+  (let [expansion (filter-codes vs {})
+        ks [:system :code]
+        coding-selected-keys (select-keys coding ks)]
+
+    (not (empty? (filter (fn [c]
+                           (and (select-keys c ks) coding-selected-keys))
+                         expansion)))))

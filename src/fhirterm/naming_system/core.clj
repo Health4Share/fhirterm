@@ -75,3 +75,6 @@
 
 (defn costly? [system filters]
   (invoke-ns-method system 'costly? filters costly-threshold))
+
+(defn validate [system coding]
+  (invoke-ns-method system 'validate coding))
