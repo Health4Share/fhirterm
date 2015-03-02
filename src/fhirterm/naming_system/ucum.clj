@@ -232,10 +232,16 @@
                   (map to-coding units-map)
                   (map to-coding (apply-filters filters)))]
 
-    (if (:text filters)
-      (filter #(util/string-contains? (:display %) (:text filters) true)
-           codings)
+    (-> codings
+        ((fn [codings]
+           (if (:text filters)
+             (filter #(util/string-contains? (:display %) (:text filters) true)
+                     codings)
+             codings)))
 
-      codings)))
+        ((fn [codings]
+           (if (:limit filters)
+             (take (java.lang.Long. (:limit filters)) codings)
+             codings))))))
 
 (defn costly? [filters threshold] false)

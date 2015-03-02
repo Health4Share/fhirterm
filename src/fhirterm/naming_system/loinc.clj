@@ -65,9 +65,14 @@
 (defn filters-to-query [filters]
   (let [pred (combine-preds (filters-to-sql-cond (:include filters))
                             (filters-to-sql-cond (:exclude filters)))]
+
     (-> (sql/from :loinc_loincs)
         ((fn [q]
            (if pred (sql/where q pred) q)))
+
+        ((fn [q]
+           (if (:limit filters)
+             (sql/limit q (java.lang.Long. (:limit filters))) q)))
 
         ((fn [q]
            (if (:text filters)

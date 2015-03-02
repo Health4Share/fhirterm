@@ -51,10 +51,13 @@
           concepts))
 
 (defn filter-codes [{{concepts :concept} :define :as vs} filters]
-  (filter-concepts concepts
-                   (partial check-concept filters)
-                   []))
+  (-> (filter-concepts concepts (partial check-concept filters) [])
+      ((fn [concepts]
+         (if (:limit filters)
+           (take (java.lang.Long. (:limit filters)) concepts)
+           concepts)))))
 
-(defn lookup-code [vs params])
+(defn lookup-code [vs params]
+  nil)
 
 (defn costly? [vs filters threshold] false)

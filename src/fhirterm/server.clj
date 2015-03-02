@@ -17,10 +17,9 @@
 (timbre/refer-timbre)
 
 (defn- normalize-expand-params [params]
-  (let [filtered (select-keys params [:filter])]
-    (if (str/blank? (:filter filtered))
-      (dissoc filtered :filter)
-      filtered)))
+  (let [ks [:filter :limit]
+        m (select-keys params ks)]
+    (select-keys m (for [[k v] m :when (not (str/blank? v))] k))))
 
 (defn respond-with [status obj]
   (let [json (if (string? obj) (json/parse obj) obj)

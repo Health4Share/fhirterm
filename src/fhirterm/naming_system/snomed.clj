@@ -70,14 +70,20 @@
         [:not [:in :concept_id (sqlc/raw (str "(" excluded-query ")"))]]
         [:in :concept_id (sqlc/raw (str "(" concept-ids-subquery ")"))]))))
 
-(defn- filters-to-query [{:keys [include exclude text] :as filters}]
+(defn- filters-to-query [{:keys [include exclude text limit] :as filters}]
   (let [q (-> (sql/select [:concept_id :code] [:term :display])
               (sql/from :snomed_descriptions_no_history)
               (sql/where (filters-to-predicate include exclude)))]
 
-    (if text
-      (sql/merge-where q [:ilike :term (str "%" text "%")])
-      q)))
+    (-> q
+        ;; text filtering
+        ((fn [q]
+           (if text
+             (sql/merge-where q [:ilike :term (str "%" text "%")])
+             q)))
+
+        ;; limit results
+        ((fn [q] (if limit (sql/limit q (java.lang.Long. limit)) q))))))
 
 (defn filter-codes [filters]
   (map row-to-coding

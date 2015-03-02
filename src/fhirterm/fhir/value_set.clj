@@ -54,7 +54,9 @@
 
     ;; add text filter, if any
     (reduce (fn [acc [ns fs]]
-              (assoc-in acc [ns :text] (:filter params)))
+              (-> acc
+                  (assoc-in [ns :text] (:filter params))
+                  (assoc-in [ns :limit] (:limit params))))
             grouped-filters grouped-filters)))
 
 (defn- expand-with-compose-include-and-exclude [expansion vs params]

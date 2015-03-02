@@ -43,12 +43,6 @@
       (merge-preds pred [:ilike :display (str "%" t "%")])
       pred)))
 
-(defn filter-codes [{tbl :table_name :as s} filters]
-  (map (partial row-to-coding s)
-       (db/q (-> (sql/select :code :display :definition)
-                 (sql/from (keyword tbl))
-                 (sql/where (filters-to-predicate filters))))))
-
 (defn lookup-code [{tbl :table_name :as s} params]
   (let [found-concept (db/q-one (-> (sql/select :code :display)
                                     (sql/from (keyword tbl))
@@ -60,8 +54,20 @@
        :display (:display found-concept)
        :designation [{:value (:display found-concept)}]})))
 
+(defn filters-to-query [s filters]
+  (-> {}
+      (sql/from (keyword (:table_name s)))
+      (sql/where (filters-to-predicate filters))
+
+      ;; add limit, if any
+      ((fn [q] (if (:limit filters) (sql/limit q (:limit filters)) q)))))
+
+(defn filter-codes [{tbl :table_name :as s} filters]
+  (map (partial row-to-coding s)
+       (db/q (-> (filters-to-query s filters)
+                 (sql/select :code :display :definition)))))
+
 (defn costly? [s filters threshold]
-  (let [count (db/q-val (-> (sql/select :%count.*)
-                            (sql/from (keyword (:table_name s)))
-                            (sql/where (filters-to-predicate filters))))]
+  (let [count (db/q-val (-> (filters-to-query s filters)
+                            (sql/select :%count.*)))]
     (> count threshold)))

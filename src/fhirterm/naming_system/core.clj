@@ -71,7 +71,7 @@
 (defn filter-codes [system filters]
   (invoke-ns-method system 'filter-codes filters))
 
-(def costly-threshold 200)
+(def costly-threshold 1000)
 
 (defn costly? [system filters]
   (invoke-ns-method system 'costly? filters costly-threshold))

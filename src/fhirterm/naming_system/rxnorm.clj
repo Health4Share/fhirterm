@@ -115,7 +115,7 @@
                                            (map filter-to-subquery f)))
                         fs)))
 
-(defn filters-to-query [{:keys [include exclude text] :as filters}]
+(defn filters-to-query [{:keys [include exclude text limit] :as filters}]
   (let [q (if (filters-empty? include exclude)
             (-> (sql/select [:rxcui :code] [:%max.str :display])
                 (sql/from :rxn_conso)
@@ -142,14 +142,21 @@
                                 [:not [:in :rxcui concept-ids-subquery]]
                                 [:in :rxcui concept-ids-subquery])])
                   (sql/group :rxcui))))]
-    (if text
-      (sql/merge-where q [:ilike :str (str "%" text "%")])
-      q)))
+    (-> q
+        ;; add text filtering
+        ((fn [q]
+           (if text
+             (sql/merge-where q [:ilike :str (str "%" text "%")])
+             q)))
+
+        ;; add limit
+        ((fn [q] (if limit (sql/limit q (java.lang.Long. limit)) q))))))
 
 (defn filter-codes [filters]
   (let [q (filters-to-query filters)]
     (map row-to-coding (db/q q))))
 
 (defn costly? [filters threshold]
-  (and (not (:text filters))
-       (filters-empty? (:include filters) [])))
+  (let [q (-> (filters-to-query filters)
+              (sql/select (sqlc/raw "COUNT(DISTINCT(rxcui))")))]
+    (> (or (db/q-val q) 0) threshold)))
