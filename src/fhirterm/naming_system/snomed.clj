@@ -99,7 +99,19 @@
                 (-> (sql/select :%count.*)
                     (sql/from [(nth predicate 2) :_]))))))
 
-(defn costly? [{:keys [include exclude] :as filters} threshold]
-  (and (not (:text filters))
-       (or (filters-empty? include exclude)
-           (> (count-codes filters) threshold))))
+(defn costly? [filters threshold]
+  (> (count-codes filters) threshold))
+
+(defn validate [filters coding]
+  (when (= snomed-uri (:system coding))
+    (let [q (-> (filters-to-query filters)
+                (sql/merge-where [:= :concept_id (java.lang.Long. (:code coding))]))
+          found-coding (db/q-one q)]
+
+      (when found-coding
+        (if (and (:display coding)
+                 (not= (:display coding) (:display found-coding)))
+          [false {:message "Display is not correct!"
+                  :display (:display found-coding)}]
+
+          [true {:message "Coding is valid"}])))))

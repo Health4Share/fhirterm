@@ -66,3 +66,22 @@
               {:system "http://loinc.org"
                :code "888-8"
                :display "Blood group antibodies SerPl"})))
+
+(deftest ^:integration validation-against-snomed-test
+  (is (valid? "valueset-route-codes"
+              {:system "http://snomed.info/sct"
+               :code "418877009"}))
+
+  (is (valid? "valueset-route-codes"
+              {:system "http://snomed.info/sct"
+               :code "445755006"
+               :display "Intravascular route (qualifier value)"}))
+
+  (is (not (valid? "valueset-route-codes"
+                   {:system "http://snomed.info/sct"
+                    :code "445755006"
+                    :display "wrong display value"})))
+
+  (is (not (valid? "valueset-route-codes"
+                   {:system "http://snomed.info/sct"
+                    :code "41887700"}))))
