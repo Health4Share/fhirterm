@@ -52,13 +52,15 @@
                 acc)))
           [] concepts))
 
-(defn filter-codes [{{concepts :concept} :define :as vs} filters]
-  (-> (filter-concepts concepts (partial check-concept filters) [])
+(defn filter-codes [{{concepts :concept system :system} :define :as vs} filters]
+  (let [concepts (-> (filter-concepts concepts (partial check-concept filters) [])
+                     ;; limit filter
+                     ((fn [concepts]
+                        (if (:limit filters)
+                          (take (java.lang.Long. (:limit filters)) concepts)
+                          concepts))))]
 
-      ((fn [concepts]
-         (if (:limit filters)
-           (take (java.lang.Long. (:limit filters)) concepts)
-           concepts)))))
+    (map (fn [c] (assoc c :system system)) concepts)))
 
 (defn lookup-code [vs params]
   nil)

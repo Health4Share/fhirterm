@@ -19,7 +19,7 @@
     (json/parse (if (string? body) body (slurp body)))))
 
 (defn validation-result [{ps :parameter :as r}]
-  (first (filter (fn [p] (= (:name p) "result")) ps)))
+  (:valueBoolean (first (filter (fn [p] (= (:name p) "result")) ps))))
 
 (defn valid? [vs-id params]
   (let [resp (validate vs-id params)]
@@ -31,8 +31,9 @@
                :code "units"}))
 
   (is (valid? "valueset-questionnaire-question-text-type"
-              {:system "http://hl7.org/fhir/questionnaire-question-text-type"
-               :code "tooltip"}))
+              {:system "http://hl7.org/fhir/questionnaire-text-type"
+               :code "tooltip"
+               :display "tool tip"}))
 
   (is (not (valid? "valueset-questionnaire-question-text-type"
                    {:system "http://hl7.org/fhir/questionnaire-question-text-type"
@@ -42,3 +43,26 @@
                    {:system "http://hl7.org/fhir/questionnaire-question-text-type"
                     :code "tooltip"
                     :display "incorrect display name"}))))
+
+(deftest ^:integration validation-against-loinc-test
+  (is (valid? "valueset-observation-codes"
+              {:system "http://loinc.org"
+               :code "55429-5"}))
+
+  (is (valid? "valueset-observation-codes"
+              {:system "http://loinc.org"
+               :code "888-8"}))
+
+  (is (not (valid? "valueset-observation-codes"
+                   {:system "http://loinc.org"
+                    :code "not-valid-coding"})))
+
+  (is (not (valid? "valueset-observation-codes"
+                   {:system "http://loinc.org"
+                    :code "888-8"
+                    :display "foo"})))
+
+  (is (valid? "valueset-observation-codes"
+              {:system "http://loinc.org"
+               :code "888-8"
+               :display "Blood group antibodies SerPl"})))
