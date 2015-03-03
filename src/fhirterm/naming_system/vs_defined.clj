@@ -65,11 +65,19 @@
 
 (defn costly? [vs filters threshold] false)
 
-(defn validate [vs coding]
-  (let [expansion (filter-codes vs {})
+(defn validate [vs filters coding]
+  (let [expansion (filter-codes vs filters)
         ks [:system :code]
-        coding-selected-keys (select-keys coding ks)]
+        coding-selected-keys (select-keys coding ks)
+        found-coding (first (filter (fn [c]
+                                      (= (select-keys c ks) coding-selected-keys))
+                                    expansion))]
 
-    (not (empty? (filter (fn [c]
-                           (and (select-keys c ks) coding-selected-keys))
-                         expansion)))))
+    (if found-coding
+      (if (and (:display coding)
+               (not= (:display coding) (:display found-coding)))
+        [false {:message "Display is not correct!"
+                :display (:display found-coding)}]
+        [true {:message "Coding is valid"}])
+
+      nil)))

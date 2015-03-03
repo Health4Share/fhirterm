@@ -32,4 +32,13 @@
 
   (is (valid? "valueset-questionnaire-question-text-type"
               {:system "http://hl7.org/fhir/questionnaire-question-text-type"
-               :code "tooltip"})))
+               :code "tooltip"}))
+
+  (is (not (valid? "valueset-questionnaire-question-text-type"
+                   {:system "http://hl7.org/fhir/questionnaire-question-text-type"
+                    :code "foobar"})))
+
+  (is (not (valid? "valueset-questionnaire-question-text-type"
+                   {:system "http://hl7.org/fhir/questionnaire-question-text-type"
+                    :code "tooltip"
+                    :display "incorrect display name"}))))

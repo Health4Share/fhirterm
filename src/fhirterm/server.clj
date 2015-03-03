@@ -5,6 +5,7 @@
             [ring.middleware.keyword-params :as ring-kw-params]
             [ring.middleware.stacktrace :as ring-stacktrace]
             [ring.middleware.resource :as ring-resource]
+            [ring.middleware.cors :as ring-cors]
             [fhirterm.json :as json]
             [fhirterm.util :as util]
             [fhirterm.naming-system.core :as ns-core]
@@ -63,9 +64,11 @@
       (let [coding (non-blank-keys params [:code :display :system :version])
             vs (vs/find-by-id id)]
         (if vs
-          (let [result (vs/validate vs coding)]
-            (respond-with 200 (fhir/make-parameters {:result result
-                                                     :message "TODO: some message here"})))
+          (let [result (vs/validate vs coding)
+                params-result (assoc (second result)
+                                :result (first result))]
+
+            (respond-with 200 (fhir/make-parameters params-result)))
 
           (respond-with-not-found (format "Could not find ValueSet with id = %s" id))))))
 
@@ -108,6 +111,8 @@
 
 (defn- make-handler [env]
   (-> #(app %)
+      (ring-cors/wrap-cors :access-control-allow-origin #".*"
+                           :access-control-allow-methods [:get :post])
       (wrap-with-benchmark)
       (ring-kw-params/wrap-keyword-params)
       (ring-params/wrap-params)

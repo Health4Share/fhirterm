@@ -18,7 +18,8 @@
                  [criterium "0.4.3"]
                  [com.taoensso/timbre "3.3.1"]
                  [instaparse "1.3.5"] ;; parser generator for UCUM parsing
-                 [org.clojure/data.csv "0.1.2"]]
+                 [org.clojure/data.csv "0.1.2"]
+                 [ring-cors "0.1.6"]]
 
   :java-source-paths ["src/java"]
 

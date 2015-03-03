@@ -76,8 +76,8 @@
     (or result
         (reduce (fn [res [ns filters]]
                   (let [system (resolve-naming-system ns)]
-                    (or res (naming-system/validate system coding))))
-                false filters-by-ns))))
+                    (or res (naming-system/validate system filters coding))))
+                nil filters-by-ns))))
 
 (defn- expand-with-define [expansion vs params]
   (into expansion
@@ -87,7 +87,7 @@
 
 (defn- validate-with-define [result vs coding]
   (or result
-      (vs-defined-ns/validate vs coding)))
+      (vs-defined-ns/validate vs {} coding)))
 
 (declare expand*)
 (defn- expand-with-compose-import [expansion vs params]
@@ -108,7 +108,7 @@
                       (let [imported-vs (find-by-identifier identifier)]
                         (when imported-vs
                           (validate imported-vs coding)))))
-                false imports))))
+                nil imports))))
 
 (declare costly-expansion?)
 (defn- costly-import? [vs params]
@@ -154,7 +154,10 @@
                             :contains (map #(update-in % [:code] str) result)}))))
 
 (defn validate [vs coding]
-  (-> false
-      (validate-with-define vs coding)
-      (validate-with-compose-import vs coding)
-      (validate-with-compose-include-and-exclude vs coding)))
+  (let [result (-> nil
+                   (validate-with-define vs coding)
+                   (validate-with-compose-import vs coding)
+                   (validate-with-compose-include-and-exclude vs coding))]
+
+    (or result
+        [false {:message "Coding is not valid"}])))

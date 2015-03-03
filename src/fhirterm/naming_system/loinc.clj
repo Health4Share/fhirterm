@@ -90,3 +90,10 @@
                             (sql/select :%count.*)))]
 
     (> count threshold)))
+
+(defn validate [filters coding]
+  (let [query (-> (filters-to-query filters)
+                  (sql/select :loinc_num :shortname)
+                  (sql/merge-where [:= :loinc_num (:code coding)]))
+        found-coding (db/q-one query)]
+    nil))
