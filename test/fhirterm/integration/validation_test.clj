@@ -105,3 +105,22 @@
   (is (not (valid? "valueset-custom-ns-no-filters"
                    {:system "http://example.com/custom_ns"
                     :code "foobar"}))))
+
+(deftest ^:integration validation-against-rxnorm-ns-test
+  (is (valid? "valueset-test-rxnorm-filter-sty"
+              {:system "http://www.nlm.nih.gov/research/umls/rxnorm"
+               :code "2236"}))
+
+  (is (valid? "valueset-test-rxnorm-filter-sty"
+              {:system "http://www.nlm.nih.gov/research/umls/rxnorm"
+               :code "1306059"
+               :display "Tildipirosin"}))
+
+  (is (not (valid? "valueset-test-rxnorm-filter-sty"
+                   {:system "http://www.nlm.nih.gov/research/umls/rxnorm"
+                    :code "130605999999"})))
+
+  (is (not (valid? "valueset-test-rxnorm-filter-sty"
+                   {:system "http://www.nlm.nih.gov/research/umls/rxnorm"
+                    :code "1306059"
+                    :display "foobar"}))))
