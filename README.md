@@ -16,7 +16,8 @@ Sponsored by:
 Command to create DB backup:
 
 ```
-$ pg_dump -h localhost -U fhirterm -T netrika_lab_services --exclude-table-data=custom_naming_systems -x --no-owner --no-acl -W -d fhirterm -F c -Z 9 -f fhirterm.backup```
+$ pg_dump -h localhost -U fhirterm -T netrika_lab_services --exclude-table-data=custom_naming_systems -x --no-owner --no-acl -W -d fhirterm -F c -Z 9 -f fhirterm.backup
+```
 
 ## License
 
