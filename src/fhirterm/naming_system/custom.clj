@@ -71,3 +71,18 @@
   (let [count (db/q-val (-> (filters-to-query s filters)
                             (sql/select :%count.*)))]
     (> count threshold)))
+
+(defn validate [{uri :uri :as s} filters coding]
+  (when (= uri (:system coding))
+    (let [q (-> (filters-to-query s filters)
+                (sql/select :code :display)
+                (sql/merge-where [:= :code (:code coding)]))
+          found-coding (db/q-one q)]
+
+      (when found-coding
+        (if (and (:display coding)
+                 (not= (:display coding) (:display found-coding)))
+          [false {:message "Display is not correct!"
+                  :display (:display found-coding)}]
+
+          [true {:message "Coding is valid"}])))))

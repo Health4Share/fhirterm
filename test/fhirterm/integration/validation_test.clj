@@ -5,6 +5,7 @@
             [fhirterm.helpers :as helpers]
             [org.httpkit.client :as http]))
 
+(use-fixtures :once fixtures/create-custom-ns-fixture)
 (use-fixtures :once fixtures/import-vs-fixture)
 (use-fixtures :once fixtures/start-server-fixture)
 
@@ -85,3 +86,22 @@
   (is (not (valid? "valueset-route-codes"
                    {:system "http://snomed.info/sct"
                     :code "41887700"}))))
+
+(deftest ^:integration validation-against-custom-ns-test
+  (is (valid? "valueset-custom-ns-no-filters"
+              {:system "http://example.com/custom_ns"
+               :code "a"}))
+
+  (is (valid? "valueset-custom-ns-no-filters"
+              {:system "http://example.com/custom_ns"
+               :code "b"
+               :display "B code"}))
+
+  (is (not (valid? "valueset-custom-ns-no-filters"
+                   {:system "http://example.com/custom_ns"
+                    :code "a"
+                    :display "wrong display value"})))
+
+  (is (not (valid? "valueset-custom-ns-no-filters"
+                   {:system "http://example.com/custom_ns"
+                    :code "foobar"}))))
