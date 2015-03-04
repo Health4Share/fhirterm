@@ -10,3 +10,4 @@ pom.xml.asc
 /test/config.json
 /data/*.zip
 /log/*.log
+/data/*.sqlite3

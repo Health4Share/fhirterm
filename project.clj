@@ -7,7 +7,8 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/java.jdbc "0.3.6"]
-                 [postgresql/postgresql "8.4-702.jdbc4"]
+                 [com.mchange/c3p0 "0.9.5-pre9"]
+                 [org.xerial/sqlite-jdbc "3.8.7"]
                  [compojure "1.3.1"]
                  [http-kit "2.1.16"]
                  [org.clojure/tools.cli "0.3.1"]
@@ -31,4 +32,5 @@
                    :tasks :task
                    :all (constantly true)}
 
-  :main fhirterm.core)
+  :main fhirterm.core
+  :aot [fhirterm.sqlite.connection-customizer])

@@ -92,8 +92,6 @@ $BODY$
 LANGUAGE sql IMMUTABLE"])
 
 (defn- prepare-db [db]
-
-
   (println "Created SNOMED tables"))
 
 (defn- find-file [file-seq re]

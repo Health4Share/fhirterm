@@ -10,13 +10,23 @@
             [taoensso.timbre :as timbre]
             [honeysql.core :as honeysql]
             [honeysql.format :as honeysql-format])
+
   (:import (org.joda.time DateTime)
            (java.sql Timestamp)
            (java.util Date)
-           (org.postgresql.jdbc4 Jdbc4Array)
-           (org.postgresql.util PGobject)))
+           (java.util Properties)
+           (com.mchange.v2.c3p0 DataSources)
+           (com.mchange.v2.c3p0 AbstractConnectionCustomizer)
+           (org.sqlite SQLiteConfig)
+           (org.sqlite SQLiteDataSource)))
 
 (timbre/refer-timbre)
+
+(defn ^Properties map->properties [m]
+  (let [p (Properties.)]
+    (doseq [[k ^String v] m]
+      (.setProperty p (name k) v))
+    p))
 
 (def ^:dynamic *db* nil)
 
@@ -39,23 +49,41 @@
                         "\n" msg#))))
          (throw e#)))))
 
+(defn- make-pooled-data-source [config]
+  (let [config (doto (new SQLiteConfig)
+                 (.setPageSize 4096))
+
+        properties (map->properties {"connectionCustomizerClassName"
+                                     "fhirterm.sqlite.ConnectionCustomizer"})
+
+        unpooled-ds (doto (SQLiteDataSource. config)
+                      (.setUrl "jdbc:sqlite:data/fhirterm.sqlite3"))]
+
+    {:datasource (DataSources/pooledDataSource unpooled-ds properties)}))
+
 (defn start [{config :db}]
   (alter-var-root #'*db*
-                  (constantly config))
-  config)
+                  (fn [_]
+                    (make-pooled-data-source config)))
+  *db*)
 
 (defn quote-str [s]
   (str "'" (str/replace s "'" "''") "'"))
 
 (defn stop []
   (alter-var-root #'*db*
-                  (constantly nil)))
+                  (fn [{ds :datasource :as db-spec}]
+                    (when ds (DataSources/destroy ds))
+                    nil)))
 
 (defn- extract-db-from-args [args]
   (let [maybe-db (first args)
         others (rest args)]
     (if (and (map? maybe-db)
-             (set/superset? (set (keys maybe-db)) #{:subname :subprotocol :classname}))
+             (or
+              (:datasource maybe-db)
+              (set/superset? (set (keys maybe-db))
+                             #{:subname :subprotocol :classname})))
       [maybe-db others] ;; yep, it's db
       [*db* args])))
 
@@ -121,16 +149,16 @@
 ;; COERCING
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn pg-obj [type value]
-  (let [coerced-value (condp = type
-                        :jsonb (json/generate value)
-                        :json (json/generate value)
-                        (str value))
-        pg-obj (org.postgresql.util.PGobject.)]
-    (.setType pg-obj (name type))
-    (.setValue pg-obj coerced-value)
+;; (defn pg-obj [type value]
+;;   (let [coerced-value (condp = type
+;;                         :jsonb (json/generate value)
+;;                         :json (json/generate value)
+;;                         (str value))
+;;         pg-obj (org.postgresql.util.PGobject.)]
+;;     (.setType pg-obj (name type))
+;;     (.setValue pg-obj coerced-value)
 
-    pg-obj))
+;;     pg-obj))
 
 (def db-timezone (t/time-zone-for-id "UTC"))
 
@@ -184,14 +212,14 @@
 (defmethod from-jdbc clojure.lang.PersistentArrayMap [m] (map-map m from-jdbc))
 (defmethod from-jdbc clojure.lang.PersistentHashMap [m] (map-map m from-jdbc))
 
-(defmethod from-jdbc org.postgresql.util.PGobject [v]
-  (condp = (.getType v)
-    "json" (json/parse (.toString v))
-    "jsonb" (json/parse (.toString v))
-    (.toString v)))
+;; (defmethod from-jdbc org.postgresql.util.PGobject [v]
+;;   (condp = (.getType v)
+;;     "json" (json/parse (.toString v))
+;;     "jsonb" (json/parse (.toString v))
+;;     (.toString v)))
 
-(defmethod from-jdbc org.postgresql.jdbc4.Jdbc4Array [v]
-  (vec (.getArray v)))
+;; (defmethod from-jdbc org.postgresql.jdbc4.Jdbc4Array [v]
+;;   (vec (.getArray v)))
 
 (defmethod from-jdbc java.sql.Timestamp [v]
   (sql-time-to-clj-time v))
