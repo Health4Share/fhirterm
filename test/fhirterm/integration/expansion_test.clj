@@ -83,13 +83,13 @@
 
 (deftest ^:integration expansion-of-snomed-vs-composed-from-two-lookups-test
   (let [result (get-expansion (expand-vs "valueset-daf-problem"
-                                         {:filter "s"}))]
-    (is (find-coding result 162005007))
-    (is (find-coding result 308698004))
-    (is (find-coding result 163032006))
-    (is (find-coding result 164006007))
+                                         {:filter "sa"}))]
+    (is (find-coding result 207593002))
+    (is (find-coding result 163925000))
+    (is (find-coding result 163369004))
+    (is (find-coding result 163699001))
 
-    (is (= (count result) 3580))))
+    (is (= (count result) 112))))
 
 (deftest ^:integration expansion-of-vs-with-import-test
   (let [result (get-expansion (expand-vs "valueset-questionnaire-question-text-type"))]
@@ -228,7 +228,10 @@
   (doseq [vs ["valueset-ucum-vitals-common"
               "valueset-daf-problem-severity"
               "lipid-ldl-codes"
-              "valueset-contraindication-mitigation-action"]]
+              "valueset-diagnostic-requests"
+              "valueset-daf-problem"
+              "valueset-contraindication-mitigation-action"
+              "valueset-test-rxnorm-filter-except-only"]]
     (let [r (get-expansion (expand-vs vs {:limit 1}))]
       (is (= (count r) 1) vs)))
 

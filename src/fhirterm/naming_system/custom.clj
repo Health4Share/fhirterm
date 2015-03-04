@@ -68,9 +68,10 @@
                  (sql/select :code :display :definition)))))
 
 (defn costly? [s filters threshold]
-  (let [count (db/q-val (-> (filters-to-query s filters)
-                            (sql/select :%count.*)))]
-    (> count threshold)))
+  (and (not (:limit filters))
+       (> (db/q-val (-> (filters-to-query s filters)
+                        (sql/select :%count.*)))
+          threshold)))
 
 (defn validate [{uri :uri :as s} filters coding]
   (when (= uri (:system coding))

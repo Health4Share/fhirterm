@@ -89,18 +89,13 @@
   (map row-to-coding
        (db/q (filters-to-query filters))))
 
-(defn- count-codes [{:keys [include exclude] :as filters}]
-  (db/q-val (let [predicate (filters-to-predicate include exclude)]
-              (if (or (nil? predicate) (= (first predicate) :not))
-                (-> (sql/select :%count.*)
-                    (sql/from :snomed_descriptions_no_history)
-                    (sql/where predicate))
-
-                (-> (sql/select :%count.*)
-                    (sql/from [(nth predicate 2) :_]))))))
+(defn- count-codes [filters]
+  (db/q-val (-> (filters-to-query filters)
+                (sql/select :%count.*))))
 
 (defn costly? [filters threshold]
-  (> (count-codes filters) threshold))
+  (and (not (:limit filters))
+       (> (count-codes filters) threshold)))
 
 (defn validate [filters coding]
   (when (= snomed-uri (:system coding))

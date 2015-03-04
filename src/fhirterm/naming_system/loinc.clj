@@ -65,7 +65,6 @@
 (defn filters-to-query [filters]
   (let [pred (combine-preds (filters-to-sql-cond (:include filters))
                             (filters-to-sql-cond (:exclude filters)))]
-
     (-> (sql/from :loinc_loincs)
         ((fn [q]
            (if pred (sql/where q pred) q)))
@@ -85,11 +84,11 @@
 
     (map row-to-coding (db/q query))))
 
-(defn costly? [filters threshold]
-  (let [count (db/q-val (-> (filters-to-query filters)
-                            (sql/select :%count.*)))]
-
-    (> count threshold)))
+(defn costly? [{limit :limit :as filters} threshold]
+  (and (not limit)
+       (> (db/q-val (-> (filters-to-query filters)
+                        (sql/select :%count.*)))
+          threshold)))
 
 (defn validate [filters coding]
   (when (= loinc-uri (:system coding))

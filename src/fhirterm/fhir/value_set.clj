@@ -99,7 +99,7 @@
                   result)))
             expansion imports)))
 
-(declare validate)
+(declare validate*)
 (defn- validate-with-compose-import [result vs coding]
   (or result
       (let [imports (get-in vs [:compose :import])]
