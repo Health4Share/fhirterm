@@ -67,20 +67,11 @@
 
 (defn costly? [vs filters threshold] false)
 
-(defn validate [{{system :system} :define :as vs} filters coding]
-  (when (= system (:system coding))
+(defn validate [{{system-uri :system} :define :as vs} filters coding]
+  (when (= system-uri (:system coding))
     (let [expansion (filter-codes vs filters)
           ks [:system :code]
-          coding-selected-keys (select-keys coding ks)
-          found-coding (first (filter (fn [c]
-                                        (= (select-keys c ks) coding-selected-keys))
-                                      expansion))]
-
-      (if found-coding
-        (if (and (:display coding)
-                 (not= (:display coding) (:display found-coding)))
-          [false {:message "Display is not correct!"
-                  :display (:display found-coding)}]
-          [true {:message "Coding is valid"}])
-
-        nil))))
+          coding-selected-keys (select-keys coding ks)]
+      (first (filter (fn [c]
+                       (= (select-keys c ks) coding-selected-keys))
+                     expansion)))))

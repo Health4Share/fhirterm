@@ -164,14 +164,5 @@
 
 (defn validate [filters coding]
   (when (= rxnorm-uri (:system coding))
-    (let [q (-> (filters-to-query filters)
-                (sql/merge-where [:= :rxcui (:code coding)]))
-          found-coding (db/q-one q)]
-
-      (when found-coding
-        (if (and (:display coding)
-                 (not= (:display coding) (:display found-coding)))
-          [false {:message "Display is not correct!"
-                  :display (:display found-coding)}]
-
-          [true {:message "Coding is valid"}])))))
+    (db/q-one (-> (filters-to-query filters)
+                  (sql/merge-where [:= :rxcui (:code coding)])))))

@@ -107,7 +107,7 @@
                   (or res
                       (let [imported-vs (find-by-identifier identifier)]
                         (when imported-vs
-                          (validate imported-vs coding)))))
+                          (validate* imported-vs coding)))))
                 nil imports))))
 
 (declare costly-expansion?)
@@ -153,11 +153,21 @@
                             :timestamp (time/now)
                             :contains (map #(update-in % [:code] str) result)}))))
 
-(defn validate [vs coding]
-  (let [result (-> nil
-                   (validate-with-define vs coding)
-                   (validate-with-compose-import vs coding)
-                   (validate-with-compose-include-and-exclude vs coding))]
+(defn validate* [vs coding]
+  (-> nil
+      (validate-with-define vs coding)
+      (validate-with-compose-import vs coding)
+      (validate-with-compose-include-and-exclude vs coding)))
 
-    (or result
-        [false {:message "Coding is not valid"}])))
+(defn validate [vs coding]
+  (let [found-coding (validate* vs coding)]
+    (if found-coding
+      (if (and (:display coding)
+               (not= (:display coding) (:display found-coding)))
+
+        [false {:message "Display is not correct!"
+                :display (:display found-coding)}]
+
+        [true {:message "Coding is valid"}])
+
+      [false {:message "Coding is not valid"}])))

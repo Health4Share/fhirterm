@@ -93,17 +93,6 @@
 
 (defn validate [filters coding]
   (when (= loinc-uri (:system coding))
-    (let [query (-> (filters-to-query filters)
-                    (sql/select [:loinc_num :code] [:shortname :display])
-                    (sql/merge-where [:= :loinc_num (:code coding)]))
-          found-coding (db/q-one query)]
-
-      (if found-coding
-        (if (and (:display coding)
-                 (not= (:display coding) (:display found-coding)))
-          [false {:message "Display is not correct!"
-                  :display (:display found-coding)}]
-
-          [true {:message "Coding is valid"}])
-
-        nil))))
+    (db/q-one (-> (filters-to-query filters)
+                  (sql/select [:loinc_num :code] [:shortname :display])
+                  (sql/merge-where [:= :loinc_num (:code coding)])))))

@@ -77,4 +77,6 @@
   (invoke-ns-method system 'costly? filters costly-threshold))
 
 (defn validate [system filters coding]
-  (invoke-ns-method system 'validate filters coding))
+  (let [coding-with-normalized-system-uri
+        (update-in coding [:system] normalize-system-uri)]
+    (invoke-ns-method system 'validate filters coding-with-normalized-system-uri)))
