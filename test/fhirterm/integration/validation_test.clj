@@ -124,3 +124,22 @@
                    {:system "http://www.nlm.nih.gov/research/umls/rxnorm"
                     :code "1306059"
                     :display "foobar"}))))
+
+(deftest ^:integration validation-against-ucum-ns-test
+  (is (valid? "valueset-ucum-vitals-common"
+              {:system "http://unitsofmeasure.org"
+               :code "%"}))
+
+  (is (valid? "valueset-ucum-vitals-common"
+              {:system "http://unitsofmeasure.org"
+               :code "cm"
+               :display "centimeter"}))
+
+  (is (not (valid? "valueset-ucum-vitals-common"
+                   {:system "http://unitsofmeasure.org"
+                    :code "cm"
+                    :display "foobar"})))
+
+  (is (not (valid? "valueset-ucum-vitals-common"
+                   {:system "http://unitsofmeasure.org"
+                    :code "foobar"}))))
