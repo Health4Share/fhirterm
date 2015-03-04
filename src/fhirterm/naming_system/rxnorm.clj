@@ -157,10 +157,11 @@
     (map row-to-coding (db/q q))))
 
 (defn costly? [filters threshold]
-  (let [q (-> (filters-to-query filters)
-              (sql/select (sqlc/raw "COUNT(DISTINCT(rxcui))"))
-              (dissoc :group-by))]
-    (> (or (db/q-val q) 0) threshold)))
+  (and (not (:limit filters))
+       (> (or (db/q-val (-> (filters-to-query filters)
+                            (sql/select (sqlc/raw "COUNT(DISTINCT(rxcui))"))
+                            (dissoc :group-by))) 0)
+          threshold)))
 
 (defn validate [filters coding]
   (when (= rxnorm-uri (:system coding))
