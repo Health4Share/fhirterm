@@ -1,3 +1,5 @@
+# [DEPRECATED] No longer being actively developed
+
 [![Build Status](https://travis-ci.org/fhirbase/fhirterm.svg?branch=master)](https://travis-ci.org/fhirbase/fhirterm)
 
 # fhirterm
